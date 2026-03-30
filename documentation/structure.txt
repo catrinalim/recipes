@@ -1,0 +1,18 @@
+recipe-app/
+├── backend/
+│   ├── server.js
+│   ├── db/
+│   │   ├── connection.js
+│   │   └── schema.sql
+│   ├── routes/
+│   │   ├── recipes.js
+│   │   ├── ingredients.js
+│   │   └── inventory.js
+│   ├── controllers/
+│   │   ├── recipeController.js
+│   │   ├── ingredientController.js
+│   │   └── inventoryController.js
+│   └── middleware/
+│       └── auth.js
+└── frontend/
+    └── (React Native app)
