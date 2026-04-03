@@ -1,31 +1,26 @@
 const userRepo = require('../repositories/userRepository');
-
-const getAllUsers = async () => {
-    const { rows } = await userRepo.findAll();
-    return rows;
-};
+const bcrypt = require('bcrypt');
 
 const getUserById = async (id) => {
-    const { rows } = await userRepo.findById(id);
-    if (!rows[0]) throw new Error('User not found');
-    return rows[0];
+  const { rows } = await userRepo.findById(id);
+  if (!rows[0]) throw new Error('User not found');
+  return rows[0];
 };
 
-const createUser = async (name, email) => {
-    if (!name) throw new Error('Name is required');
-    if (!email) throw new Error('email is required');
-    const { rows } = await userRepo.create(name, email);
-    return rows[0];
+const register = async (username, email, password) => {
+  if (!username || !email || !password) throw new Error('All fields are required');
+  const password_hash = await bcrypt.hash(password, 10);
+  const { rows } = await userRepo.create(username, email, password_hash);
+  return rows[0];
 };
 
-const updateUser = async (id, name, email) => {
-    const { rows } = await userRepo.update(id, name, email);
-    if (!rows[0]) throw new Error('User not found');
-    return rows[0];
+const login = async (email, password) => {
+    const { rows } = await userRepo.findByEmail(email);
+    const user = rows[0];
+    if (!user) throw new Error('Invalid credentials');
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) throw new Error('Invalid credentials');
+    return user;
 };
 
-const deleteUser = async (id) => {
-    await userRepo.remove(id);
-};
-
-module.exports = { getAllUsers, getUserById, updateUser, deleteUser };
+module.exports = { getUserById, register, login }
