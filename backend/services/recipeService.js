@@ -32,5 +32,5 @@ const deleteRecipe = async (id, user_id) => {
     await recipeRepo.remove(id);
 };
 
-module.exports = { getUserREcipes, getRecipeById, createRecipe, updateRecipe, deleteRecipe };
+module.exports = { getUserRecipes, getRecipeById, createRecipe, updateRecipe, deleteRecipe };
 
