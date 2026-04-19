@@ -9,12 +9,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Test route
+// Import Routes
+const recipeRoutes = require('./routes/recipes');
+// const ingredientRoutes = require('./routes/ingredients');
+const inventoryRoutes = require('./routes/inventory');
+
+// Test Route
 app.get('/', (req, res) => {
   res.json({ message: 'Recipe API is running!' });
 });
 
-// Start server
+// Mount Routes
+
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
