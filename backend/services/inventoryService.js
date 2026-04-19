@@ -1,23 +1,33 @@
-const inventoryRepo = require('../repositories/inventoryRepository');
+const inventoryRepository = require('../repositories/inventoryRepository');
 
-const getInventory = async (user_id) => {
-  const { rows } = await inventoryRepo.findByUser(user_id);
-  return rows;
-};
+class InventoryService {
+    async getInventory(userId) {
+        return await inventoryRepository.findByUserId(userId);
+    }
 
-const addToInventory = async (user_id, ingredient_name) => {
-  if (!ingredient_name) throw new Error('Ingredient name is required');
-  const { rows } = await inventoryRepo.addItem(user_id, ingredient_name.toLowerCase().trim());
-  return rows[0];
-};
+    async addIngredient(userId, ingredientName) {
+        if (!userId || !ingredientName) {
+            throw new Error('User ID and ingredient name are required');
+        }
 
-const removeFromInventory = async (user_id, ingredient_name) => {
-  await inventoryRepo.removeItem(user_id, ingredient_name);
-};
+        return await inventoryRepository.create(userId, ingredientName);
+    }
 
-const getMakeableRecipes = async (user_id) => {
-  const { rows } = await inventoryRepo.findMakeableRecipes(user_id);
-  return rows;
-};
+    async updateIngredient(id, ingredientName) {
+        const ingredient = await inventoryRepository.update(id, ingredientName);
+        if (!ingredient) {
+            throw new Error('Ingredient not found');
+        }
+        return ingredient;
+    }
 
-module.exports = { getInventory, addToInventory, removeFromInventory, getMakeableRecipes };
+    async deleteIngredient(id) {
+        const ingredient = await inventoryRepository.delete(id);
+        if (!ingredient) {
+            throw new Error('Ingredient not found');
+        }
+        return ingredient;
+    }
+}
+
+module.exports = new InventoryService();

@@ -1,36 +1,63 @@
-const recipeRepo = require('../repositories/recipeRepository');
-const ingredientRepo = require('../repositories/ingredientRepository');
+const recipeRepository = require('../repositories/recipeRepository');
+const ingredientRepository = require('../repositories/ingredientRepository');
 
-const getUserRecipes = async (user_id) => {
-    const { rows } = await recipeRepo.findAllByUser(user_id);
-    return rows;
-};
+class RecipeService {
+    async getAllRecipesByUser(userId) {
+        return await recipeRepository.findAllByUserId(userId);
+    }
 
-const getRecipeById = async (IdleDeadline, user_id) => {
-    const { rows } = await recipeRepo.findById(id);
-    const recipe = rows[0];
-    if (!recipe) throw new Error('Recipe not found');
-    if (recipe.user_id !== parseInt(user_id)) throw new Error('Forbidden');
-    const { rows: ingredients } = await ingredientRepo.findByRecipe(id);
-    return { ...recipe, ingredients };
-};
+    async getRecipeById(id) {
+        const recipe = await recipeRepository.findById(id);
+        if (!recipe) {
+            throw new Error('Recipe not found');
+        }
 
-const createRecipe = async (user_id, { title, directions, notes }) => {
-    if (!title || directions) throw new Error('Title and directions are required');
-    const { rows } = await recipeRepo.create(user_id, title, directions, notes);
-    return rows[0];
-};
+        const ingredients = await ingredientRepository.findByRecipeId(id);
+        return { ...recipe, ingredients };
+    }
 
-const updateRecipe = async (id, user_id, { title, directions, notes }) => {
-    await getRecipeById(id, user_id);
-    const { rows } = await recipeRepo.update(id, title, directions, notes);
-    return rows[0];
-};
+    async createRecipe(userId, title, directions, notes, ingredients) {
+        // Validate required fields
+        if (!title || !directions) {
+            throw new Error('Title and directions are required');
+        }
 
-const deleteRecipe = async (id, user_id) => {
-    await getRecipeById(id, user_id);
-    await recipeRepo.remove(id);
-};
+        // Create recipe
+        const recipe = await recipeRepository.create(userId, title, directions, notes);
 
-module.exports = { getUserRecipes, getRecipeById, createRecipe, updateRecipe, deleteRecipe };
+        // Add ingredients if provided
+        if (ingredients && ingredients.length > 0) {
+            await ingredientRepository.createMany(recipe.id, ingredients);
+        }
 
+        return recipe;
+    }
+
+    async updateRecipe(id, title, directions, notes, ingredients) {
+        const recipe = await recipeRepository.findById(id);
+        if (!recipe) {
+            throw new Error('Recipe not found');
+        }
+
+        const updatedRecipe = await recipeRepository.update(id, title, directions, notes);
+
+        // Update ingredients if provided
+        if (ingredients) {
+            await ingredientRepository.deleteByRecipeId(id);
+            await ingredientRepository.createMany(id, ingredients);
+        }
+
+        return updatedRecipe;
+    }
+
+    async deleteRecipe(id) {
+        const recipe = await recipeRepository.findById(id);
+        if (!recipe) {
+            throw new Error('Recipe not found');
+        }
+
+        return await recipeRepository.delete(id);
+    }
+}
+
+module.exports = new RecipeService();

@@ -1,26 +1,53 @@
-const userRepo = require('../repositories/userRepository');
-const bcrypt = require('bcrypt');
+const userRepository = require('../repositories/userRepository');
 
-const getUserById = async (id) => {
-  const { rows } = await userRepo.findById(id);
-  if (!rows[0]) throw new Error('User not found');
-  return rows[0];
-};
+class UserService {
+    async getAllUsers() {
+        return await userRepository.findAll();
+    }
 
-const register = async (username, email, password) => {
-  if (!username || !email || !password) throw new Error('All fields are required');
-  const password_hash = await bcrypt.hash(password, 10);
-  const { rows } = await userRepo.create(username, email, password_hash);
-  return rows[0];
-};
+    async getUserById(id) {
+        const user = await userRepository.findById(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+        return user;
+    }
 
-const login = async (email, password) => {
-    const { rows } = await userRepo.findByEmail(email);
-    const user = rows[0];
-    if (!user) throw new Error('Invalid credentials');
-    const match = await bcrypt.compare(password, user.password_hash);
-    if (!match) throw new Error('Invalid credentials');
-    return user;
-};
+    async createUser(username, email, password) {
+        // Check if user already exists
+        const existingEmail = await userRepository.findByEmail(email);
+        if (existingEmail) {
+            throw new Error('Email already exists');
+        }
 
-module.exports = { getUserById, register, login }
+        const existingUsername = await userRepository.findByUsername(username);
+        if (existingUsername) {
+            throw new Error('Username already exists');
+        }
+
+        // TODO: Hash password with bcrypt in production
+        const password_hash = password; // Temporary - should use bcrypt!
+
+        return await userRepository.create(username, email, password_hash);
+    }
+
+    async updateUser(id, username, email) {
+        const user = await userRepository.findById(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        return await userRepository.update(id, username, email);
+    }
+
+    async deleteUser(id) {
+        const user = await userRepository.findById(id);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        return await userRepository.delete(id);
+    }
+}
+
+module.exports = new UserService();

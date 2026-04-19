@@ -1,27 +1,33 @@
-const ingredientRepo = require('../repositories/ingredientRepository');
-const recipeRepo = require('../repositories/recipeRepository');
+const ingredientRepository = require('../repositories/ingredientRepository');
 
-const getIngredientsForRecipe = async (recipe_id, user_id) => {
-    const { rows: recipeRows } = await recipeRepo.findById(recipe_id);
-    const recipe = recipeRows[0];
-    if (!recipe) throw new Error('Recipe not found');
-    if (recipe.user_id !== parseInt(user_id)) throw new Error('Forbidden');
-    const { rows } = await ingredientRepo.findByRecipe(recipe_id);
-    return rows;
-};
+class IngredientService {
+    async getIngredientsByRecipe(recipeId) {
+        return await ingredientRepository.findByRecipeId(recipeId);
+    }
 
-const addIngredient = async (recipe_id, user_id, { ingredient_name, quantity }) => {
-  if (!ingredient_name) throw new Error('Ingredient name is required');
-  const { rows: recipeRows } = await recipeRepo.findById(recipe_id);
-  const recipe = recipeRows[0];
-  if (!recipe) throw new Error('Recipe not found');
-  if (recipe.user_id !== parseInt(user_id)) throw new Error('Forbidden');
-  const { rows } = await ingredientRepo.addToRecipe(recipe_id, ingredient_name, quantity);
-  return rows[0];
-};
+    async addIngredient(recipeId, ingredientName, quantity) {
+        if (!recipeId || !ingredientName) {
+            throw new Error('Recipe ID and ingredient name are required');
+        }
 
-const deleteIngredient = async (id, user_id) => {
-  await ingredientRepo.remove(id);
-};
+        return await ingredientRepository.create(recipeId, ingredientName, quantity);
+    }
 
-module.exports = { getIngredientsForRecipe, addIngredient, deleteIngredient };
+    async updateIngredient(id, ingredientName, quantity) {
+        const ingredient = await ingredientRepository.update(id, ingredientName, quantity);
+        if (!ingredient) {
+            throw new Error('Ingredient not found');
+        }
+        return ingredient;
+    }
+
+    async deleteIngredient(id) {
+        const ingredient = await ingredientRepository.delete(id);
+        if (!ingredient) {
+            throw new Error('Ingredient not found');
+        }
+        return ingredient;
+    }
+}
+
+module.exports = new IngredientService();

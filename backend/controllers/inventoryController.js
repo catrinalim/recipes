@@ -1,39 +1,48 @@
 const inventoryService = require('../services/inventoryService');
 
-const getInventory = async (req, res) => {
-  try {
-    const items = await inventoryService.getInventory(req.user.id);
-    res.json(items);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+exports.getInventory = async (req, res) => {
+    try {
+        const { user_id } = req.query;
+        const inventory = await inventoryService.getInventory(user_id);
+        res.json(inventory);
+    } catch (error) {
+        console.error('Error getting inventory:', error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
-const addItem = async (req, res) => {
-  try {
-    const item = await inventoryService.addToInventory(req.user.id, req.body.ingredient_name);
-    res.status(201).json(item);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+exports.addIngredient = async (req, res) => {
+    try {
+        const { user_id, ingredient_name } = req.body;
+        const ingredient = await inventoryService.addIngredient(user_id, ingredient_name);
+        res.status(201).json(ingredient);
+    } catch (error) {
+        console.error('Error adding ingredient:', error);
+        res.status(400).json({ error: error.message });
+    }
 };
 
-const removeItem = async (req, res) => {
-  try {
-    await inventoryService.removeFromInventory(req.user.id, req.params.ingredient_name);
-    res.status(204).send();
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+exports.updateIngredient = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ingredient_name } = req.body;
+        const ingredient = await inventoryService.updateIngredient(id, ingredient_name);
+        res.json(ingredient);
+    } catch (error) {
+        console.error('Error updating ingredient:', error);
+        const status = error.message === 'Ingredient not found' ? 404 : 500;
+        res.status(status).json({ error: error.message });
+    }
 };
 
-const getMakeableRecipes = async (req, res) => {
-  try {
-    const recipes = await inventoryService.getMakeableRecipes(req.user.id);
-    res.json(recipes);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+exports.deleteIngredient = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await inventoryService.deleteIngredient(id);
+        res.json({ message: 'Ingredient deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting ingredient:', error);
+        const status = error.message === 'Ingredient not found' ? 404 : 500;
+        res.status(status).json({ error: error.message });
+    }
 };
-
-module.exports = { getInventory, addItem, removeItem, getMakeableRecipes };

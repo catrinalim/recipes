@@ -1,31 +1,48 @@
 const ingredientService = require('../services/ingredientService');
 
-const getAll = async (req, res) => {
-  try {
-    const ingredients = await ingredientService.getIngredientsForRecipe(req.params.recipe_id, req.user.id);
-    res.json(ingredients);
-  } catch (err) {
-    const status = err.message === 'Forbidden' ? 403 : 404;
-    res.status(status).json({ error: err.message });
-  }
+exports.getIngredientsByRecipe = async (req, res) => {
+    try {
+        const { recipe_id } = req.params;
+        const ingredients = await ingredientService.getIngredientsByRecipe(recipe_id);
+        res.json(ingredients);
+    } catch (error) {
+        console.error('Error getting ingredients:', error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
-const add = async (req, res) => {
-  try {
-    const ingredient = await ingredientService.addIngredient(req.params.recipe_id, req.user.id, req.body);
-    res.status(201).json(ingredient);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+exports.addIngredient = async (req, res) => {
+    try {
+        const { recipe_id, ingredient_name, quantity } = req.body;
+        const ingredient = await ingredientService.addIngredient(recipe_id, ingredient_name, quantity);
+        res.status(201).json(ingredient);
+    } catch (error) {
+        console.error('Error adding ingredient:', error);
+        res.status(400).json({ error: error.message });
+    }
 };
 
-const remove = async (req, res) => {
-  try {
-    await ingredientService.deleteIngredient(req.params.id, req.user.id);
-    res.status(204).send();
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
+exports.updateIngredient = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ingredient_name, quantity } = req.body;
+        const ingredient = await ingredientService.updateIngredient(id, ingredient_name, quantity);
+        res.json(ingredient);
+    } catch (error) {
+        console.error('Error updating ingredient:', error);
+        const status = error.message === 'Ingredient not found' ? 404 : 500;
+        res.status(status).json({ error: error.message });
+    }
 };
 
-module.exports = { getAll, add, remove };
+exports.deleteIngredient = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await ingredientService.deleteIngredient(id);
+        res.json({ message: 'Ingredient deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting ingredient:', error);
+        const status = error.message === 'Ingredient not found' ? 404 : 500;
+        res.status(status).json({ error: error.message });
+    }
+};
