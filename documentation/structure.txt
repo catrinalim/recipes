@@ -16,3 +16,13 @@ recipe-app/
 │       └── auth.js
 └── frontend/
     └── (React Native app)
+
+recipe_db
+├── users
+│   └── Stores user accounts
+├── recipes
+│   └── Stores recipes (linked to users)
+├── recipe_ingredients
+│   └── Stores ingredients for each recipe
+└── user_inventory
+    └── Stores what ingredients user currently has
